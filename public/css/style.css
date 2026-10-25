@@ -1,0 +1,327 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f7fb;
+    color: #243247;
+}
+
+header {
+    background-color: #175cd3;
+    color: white;
+    padding: 20px 8%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    font-size: 26px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 24px;
+    font-weight: bold;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+.hero {
+    text-align: center;
+    padding: 90px 20px;
+    background: linear-gradient(135deg, #e6f0ff, #ffffff);
+}
+
+.hero h2 {
+    font-size: 36px;
+    margin-bottom: 18px;
+}
+
+.hero p {
+    font-size: 18px;
+    margin-bottom: 28px;
+    color: #526176;
+}
+
+button {
+    background-color: #175cd3;
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #1048a9;
+}
+
+section {
+    padding: 55px 8%;
+}
+
+section h2 {
+    margin-bottom: 24px;
+}
+
+.thiet-bi {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+}
+
+.card h3 {
+    margin-bottom: 12px;
+}
+
+.card p {
+    color: #526176;
+}
+
+footer {
+    background: #243247;
+    color: white;
+    text-align: center;
+    padding: 24px;
+}
+
+.btn-muon {
+    margin-top: 15px;
+    padding: 10px 18px;
+    background-color: #1d5bd6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.btn-muon:hover {
+    background-color: #1547a8;
+}
+
+.btn-muon:disabled {
+    background-color: #a0a0a0;
+    cursor: not-allowed;
+}
+
+/* Giao diện quản trị viên */
+
+.admin-container {
+    padding: 40px;
+    max-width: 1500px;
+    margin: 0 auto;
+}
+
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin: 25px 0 40px;
+}
+
+.stat-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    text-align: center;
+}
+
+.stat-card h3 {
+    font-size: 16px;
+    color: #52627a;
+    margin-bottom: 15px;
+}
+
+.stat-card p {
+    font-size: 32px;
+    font-weight: bold;
+    color: #185bd1;
+    margin: 0;
+}
+
+.admin-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+#lamMoiDanhSach {
+    background: #185bd1;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+#lamMoiDanhSach:hover {
+    background: #1046a8;
+}
+
+.admin-table-wrapper {
+    overflow-x: auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 16px 12px;
+    border-bottom: 1px solid #e5eaf1;
+}
+
+.admin-table th {
+    background: #eaf1ff;
+    color: #183b72;
+}
+
+.admin-table tbody tr:hover {
+    background: #f6f9ff;
+}
+
+@media (max-width: 900px) {
+    .admin-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .admin-container {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 500px) {
+    .admin-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-heading {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* Màu sắc trạng thái yêu cầu */
+
+.status-badge {
+    display: inline-block;
+    padding: 7px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-approved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-borrowed {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-returned {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.status-cancelled {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* Nút thao tác trên trang quản trị */
+
+.admin-actions {
+    white-space: nowrap;
+}
+
+.admin-actions button {
+    padding: 9px 13px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 600;
+    margin: 3px;
+    color: white;
+}
+
+.admin-actions button:hover {
+    opacity: 0.85;
+}
+
+.btn-approve {
+    background: #16a34a;
+}
+
+.btn-reject {
+    background: #dc2626;
+}
+
+.btn-handover {
+    background: #2563eb;
+}
+
+.btn-return {
+    background: #7c3aed;
+}
+
+/* Bố cục 6 ô thống kê */
+
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+@media (max-width: 900px) {
+    .admin-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 500px) {
+    .admin-stats {
+        grid-template-columns: 1fr;
+    }
+}

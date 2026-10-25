@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản trị viên - UniBorrow</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>UniBorrow - Quản trị viên</h1>
+        <nav>
+            <a href="/">Trang chủ</a>
+            <a href="/admin">Quản lý yêu cầu</a>
+        </nav>
+    </header>
+
+    <main class="admin-container">
+        <h2>Tổng quan yêu cầu mượn</h2>
+
+        <div class="admin-stats">
+            <div class="stat-card">
+                <h3>Tổng yêu cầu</h3>
+                <p id="tongYeuCau">0</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Chờ duyệt</h3>
+                <p id="choDuyet">0</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Đã duyệt</h3>
+                <p id="daDuyet">0</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Từ chối</h3>
+                <p id="tuChoi">0</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Đang mượn</h3>
+                <p id="dangMuon">0</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Đã trả</h3>
+                <p id="daTra">0</p>
+            </div>
+        </div>
+
+        <div class="admin-heading">
+            <h2>Danh sách yêu cầu mượn thiết bị</h2>
+
+            <button id="lamMoiDanhSach" type="button">
+                Làm mới
+            </button>
+        </div>
+
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Mã yêu cầu</th>
+                        <th>Sinh viên</th>
+                        <th>Thiết bị</th>
+                        <th>Số lượng</th>
+                        <th>Ngày mượn</th>
+                        <th>Ngày trả</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+
+                <tbody id="danhSachYeuCau">
+                    <tr>
+                        <td colspan="8">
+                            Đang tải dữ liệu...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="/js/admin.js"></script>
+</body>
+</html>
