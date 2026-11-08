@@ -1,77 +1,162 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>UniBorrow - Mượn thiết bị học tập</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
     <header>
-        <h1>UniBorrow</h1>
-
-        <nav>
-            <a href="/">Trang chủ</a>
-            <a href="#danh-sach">Thiết bị</a>
-            <a href="#gioi-thieu">Giới thiệu</a>
-        </nav>
+      <a class="brand" href="/">UniBorrow</a>
+      <nav aria-label="Điều hướng chính">
+        <a href="#danh-sach">Thiết bị</a
+        ><a href="#lich-su" id="historyLink" hidden>Lịch sử của tôi</a
+        ><a href="/admin" id="adminLink" hidden>Quản trị</a
+        ><span id="currentUser"></span
+        ><button id="logout" class="secondary" hidden>Đăng xuất</button>
+      </nav>
     </header>
-
-    <div class="hero">
-        <h2>Hệ thống mượn trả thiết bị học tập</h2>
-        <p>Tìm kiếm và đăng ký mượn thiết bị dễ dàng</p>
-        <button id="btnBatDau">Khám phá thiết bị</button>
-    </div>
-
-    <section id="danh-sach">
-        <h2>Danh sách thiết bị</h2>
-
-        <div class="thiet-bi" id="danhSachThietBi">
-        </div>
-    </section>
-
-<section id="form-muon" style="display: none;">
-    <h2>Đăng ký mượn thiết bị</h2>
-
-    <form id="formMuon">
-        <input type="hidden" id="equipmentId">
-
-        <label for="tenThietBi">Tên thiết bị:</label>
-        <input type="text" id="tenThietBi" readonly>
-
-        <label for="soLuongMuon">Số lượng:</label>
-        <input type="number" id="soLuongMuon"
-               min="1" value="1" required>
-
-        <label for="ngayMuon">Ngày mượn:</label>
-        <input type="date" id="ngayMuon" required>
-
-        <label for="ngayTra">Ngày trả:</label>
-        <input type="date" id="ngayTra" required>
-
-        <label for="ghiChu">Ghi chú:</label>
-        <textarea id="ghiChu" rows="3"></textarea>
-
-        <button type="submit">Gửi yêu cầu mượn</button>
-        <button type="button" id="dongForm">Đóng</button>
-    </form>
-</section>
-
-    <section id="gioi-thieu">
-        <h2>Giới thiệu UniBorrow</h2>
-
+    <main>
+      <div class="hero">
+        <p class="eyebrow">THIẾT BỊ HỌC TẬP · DÙNG CHUNG</p>
+        <h1>Mượn đúng thiết bị.<br />Học tập thuận tiện hơn.</h1>
+        <p>Tra cứu thiết bị, gửi yêu cầu và theo dõi từng lần mượn.</p>
+        <a class="button" href="#danh-sach">Khám phá thiết bị</a>
+      </div>
+      <div id="message" class="notice" role="status" hidden></div>
+      <section id="tai-khoan" class="panel">
+        <h2 id="authTitle">Đăng nhập</h2>
         <p>
-            UniBorrow giúp sinh viên tìm kiếm,
-            đăng ký mượn và quản lý thiết bị học tập.
+          Đăng nhập bằng tài khoản sinh viên để gửi yêu cầu mượn và xem lịch sử.
         </p>
-    </section>
-
-    <footer>
-        <p>UniBorrow - Dự án quản lý mượn trả thiết bị học tập</p>
-    </footer>
-
+        <form id="authForm" class="form-grid">
+          <label id="nameLabel" hidden
+            >Họ và tên<input
+              id="authName"
+              name="name"
+              maxlength="100"
+              autocomplete="name" /></label
+          ><label
+            >Email<input
+              id="authEmail"
+              name="email"
+              type="email"
+              required
+              maxlength="100"
+              autocomplete="username" /></label
+          ><label
+            >Mật khẩu<input
+              id="authPassword"
+              name="password"
+              type="password"
+              required
+              maxlength="128"
+              autocomplete="current-password"
+          /></label>
+          <div class="actions">
+            <button id="authSubmit" type="submit" disabled>Đăng nhập</button
+            ><button id="authSwitch" type="button" class="secondary">
+              Tạo tài khoản
+            </button>
+          </div>
+        </form>
+        <p id="authHint" class="muted">
+          Chưa có tài khoản? Chọn Tạo tài khoản để đăng ký sinh viên.
+        </p>
+      </section>
+      <section id="danh-sach">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">KHÁM PHÁ</p>
+            <h2>Danh sách thiết bị</h2>
+          </div>
+          <button id="refreshEquipment" class="secondary">
+            Làm mới thiết bị
+          </button>
+        </div>
+        <form id="equipmentFilters" class="filters">
+          <label
+            >Tìm thiết bị<input
+              id="searchEquipment"
+              type="search"
+              maxlength="100"
+              placeholder="Nhập tên thiết bị" /></label
+          ><label
+            >Loại thiết bị<select id="categoryFilter">
+              <option value="">Tất cả loại</option>
+            </select></label
+          ><label
+            >Tình trạng<select id="availabilityFilter">
+              <option value="">Tất cả tình trạng</option>
+              <option value="available">Cho phép mượn</option>
+              <option value="unavailable">Ngừng cho mượn</option>
+            </select></label
+          ><button type="submit">Tìm kiếm</button>
+        </form>
+        <div id="danhSachThietBi" class="cards" aria-live="polite">
+          Đang tải thiết bị...
+        </div>
+      </section>
+      <section id="form-muon" class="panel" hidden>
+        <h2>Đăng ký mượn thiết bị</h2>
+        <p class="muted">
+          Đã duyệt chưa có nghĩa là giữ thiết bị. Tồn kho được kiểm tra lại khi
+          bàn giao.
+        </p>
+        <form id="formMuon" class="form-grid">
+          <input id="equipmentId" type="hidden" /><label
+            >Tên thiết bị<input id="tenThietBi" readonly /></label
+          ><label
+            >Số lượng mượn<input
+              id="soLuongMuon"
+              type="number"
+              min="1"
+              step="1"
+              required /></label
+          ><label>Ngày mượn<input id="ngayMuon" type="date" required /></label
+          ><label>Ngày trả<input id="ngayTra" type="date" required /></label
+          ><label class="wide"
+            >Ghi chú (không bắt buộc)<textarea
+              id="ghiChu"
+              maxlength="2000"
+              rows="3"
+            ></textarea>
+          </label>
+          <div class="actions wide">
+            <button type="submit">Gửi yêu cầu mượn</button
+            ><button id="dongForm" type="button" class="secondary">
+              Đóng form
+            </button>
+          </div>
+        </form>
+      </section>
+      <section id="lich-su" hidden>
+        <div class="section-heading">
+          <h2>Lịch sử mượn của tôi</h2>
+          <button id="refreshHistory" class="secondary">Làm mới lịch sử</button>
+        </div>
+        <p class="muted">
+          Yêu cầu đã duyệt chưa giữ kho; thiết bị chỉ được trừ kho khi bàn giao.
+        </p>
+        <div id="historyList" class="request-list" aria-live="polite"></div>
+      </section>
+    </main>
+    <footer>UniBorrow · Quản lý mượn trả thiết bị học tập</footer>
+    <dialog id="confirmDialog" aria-labelledby="confirmTitle">
+      <h2 id="confirmTitle">Xác nhận thao tác</h2>
+      <p id="confirmText"></p>
+      <div class="actions">
+        <button id="confirmYes">Xác nhận</button
+        ><button id="confirmNo" class="secondary">Quay lại</button>
+      </div>
+    </dialog>
+    <dialog id="detailDialog" aria-labelledby="detailTitle">
+      <h2 id="detailTitle">Chi tiết thiết bị</h2>
+      <div id="detailContent"></div>
+      <button id="closeDetail" class="secondary">Đóng chi tiết</button>
+    </dialog>
+    <script src="/js/common.js"></script>
     <script src="/js/script.js"></script>
-
-</body>
+  </body>
 </html>
