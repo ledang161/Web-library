@@ -1,90 +1,144 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Quản trị viên - UniBorrow</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
     <header>
-        <h1>UniBorrow - Quản trị viên</h1>
-        <nav>
-            <a href="/">Trang chủ</a>
-            <a href="/admin">Quản lý yêu cầu</a>
-        </nav>
+      <a class="brand" href="/">UniBorrow <small>Quản trị</small></a>
+      <nav aria-label="Điều hướng quản trị">
+        <a href="/">Trang chủ</a><a href="#requests">Yêu cầu</a
+        ><a href="#equipment">Thiết bị</a><span id="currentUser"></span
+        ><button id="logout" class="secondary">Đăng xuất</button>
+      </nav>
     </header>
-
-    <main class="admin-container">
-        <h2>Tổng quan yêu cầu mượn</h2>
-
-        <div class="admin-stats">
-            <div class="stat-card">
-                <h3>Tổng yêu cầu</h3>
-                <p id="tongYeuCau">0</p>
-            </div>
-
-            <div class="stat-card">
-                <h3>Chờ duyệt</h3>
-                <p id="choDuyet">0</p>
-            </div>
-
-            <div class="stat-card">
-                <h3>Đã duyệt</h3>
-                <p id="daDuyet">0</p>
-            </div>
-
-            <div class="stat-card">
-                <h3>Từ chối</h3>
-                <p id="tuChoi">0</p>
-            </div>
-
-            <div class="stat-card">
-                <h3>Đang mượn</h3>
-                <p id="dangMuon">0</p>
-            </div>
-
-            <div class="stat-card">
-                <h3>Đã trả</h3>
-                <p id="daTra">0</p>
-            </div>
+    <main>
+      <section>
+        <p class="eyebrow">QUẢN TRỊ VIÊN</p>
+        <h1>Tổng quan mượn trả</h1>
+        <p class="muted">
+          Duyệt yêu cầu không giữ kho. Hệ thống chỉ trừ thiết bị khi bàn giao
+          thành công.
+        </p>
+        <div id="message" class="notice" role="status" hidden></div>
+        <div id="stats" class="stats" aria-live="polite">
+          Đang tải thống kê...
         </div>
-
-        <div class="admin-heading">
-            <h2>Danh sách yêu cầu mượn thiết bị</h2>
-
-            <button id="lamMoiDanhSach" type="button">
-                Làm mới
+      </section>
+      <section id="requests">
+        <div class="section-heading">
+          <h2>Quản lý yêu cầu</h2>
+          <button id="refreshRequests" class="secondary">
+            Làm mới yêu cầu
+          </button>
+        </div>
+        <form id="requestFilters" class="filters">
+          <label
+            >Tìm yêu cầu<input
+              id="requestSearch"
+              type="search"
+              maxlength="100"
+              placeholder="Mã, người mượn, email, thiết bị" /></label
+          ><label
+            >Trạng thái yêu cầu<select id="requestStatus">
+              <option value="">Tất cả trạng thái</option>
+              <option value="pending">Chờ duyệt</option>
+              <option value="approved">Đã duyệt</option>
+              <option value="borrowed">Đang mượn</option>
+              <option value="returned">Đã trả</option>
+              <option value="rejected">Từ chối</option>
+              <option value="cancelled">Đã hủy</option>
+            </select></label
+          ><button type="submit">Lọc yêu cầu</button>
+        </form>
+        <div id="requestList" class="request-list" aria-live="polite">
+          Đang tải yêu cầu...
+        </div>
+      </section>
+      <section id="equipment">
+        <div class="section-heading">
+          <h2>Quản lý thiết bị</h2>
+          <button id="newEquipment">Thêm thiết bị</button>
+        </div>
+        <p class="muted">
+          Số lượng là tồn kho hiện tại. Thiết bị đã có lịch sử sẽ được ngừng cho
+          mượn khi xóa.
+        </p>
+        <form id="adminEquipmentFilters" class="filters">
+          <label
+            >Tìm thiết bị quản trị<input
+              id="equipmentSearch"
+              type="search"
+              maxlength="100" /></label
+          ><label
+            >Loại thiết bị quản trị<select id="equipmentCategory">
+              <option value="">Tất cả loại</option>
+            </select></label
+          ><label
+            >Tình trạng thiết bị quản trị<select id="equipmentStatus">
+              <option value="">Tất cả tình trạng</option>
+              <option value="available">Cho phép mượn</option>
+              <option value="unavailable">Ngừng cho mượn</option>
+            </select></label
+          ><button type="submit">Lọc thiết bị</button>
+        </form>
+        <div id="equipmentList" class="cards" aria-live="polite">
+          Đang tải thiết bị...
+        </div>
+      </section>
+      <section id="equipmentEditor" class="panel" hidden>
+        <h2 id="editorTitle">Thêm thiết bị</h2>
+        <form id="equipmentForm" class="form-grid">
+          <input id="editId" type="hidden" /><label
+            >Tên thiết bị<input id="editName" required maxlength="100" /></label
+          ><label
+            >Loại thiết bị<input
+              id="editCategory"
+              required
+              maxlength="100" /></label
+          ><label
+            >Số lượng hiện có<input
+              id="editQuantity"
+              type="number"
+              min="0"
+              step="1"
+              required /></label
+          ><label
+            >Tình trạng thiết bị<select id="editStatus">
+              <option value="available">Cho phép mượn</option>
+              <option value="unavailable">Ngừng cho mượn</option>
+            </select></label
+          ><label class="wide"
+            >Mô tả<textarea
+              id="editDescription"
+              rows="4"
+              maxlength="5000"
+            ></textarea>
+          </label>
+          <div class="actions wide">
+            <button id="reloadEquipment" type="button" class="secondary" hidden>
+              Tải lại thiết bị (bỏ thay đổi)</button
+            ><button type="submit">Lưu thiết bị</button
+            ><button id="closeEditor" type="button" class="secondary">
+              Đóng chỉnh sửa
             </button>
-        </div>
-
-        <div class="admin-table-wrapper">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Mã yêu cầu</th>
-                        <th>Sinh viên</th>
-                        <th>Thiết bị</th>
-                        <th>Số lượng</th>
-                        <th>Ngày mượn</th>
-                        <th>Ngày trả</th>
-                        <th>Trạng thái</th>
-                        <th>Thao tác</th>
-                    </tr>
-                </thead>
-
-                <tbody id="danhSachYeuCau">
-                    <tr>
-                        <td colspan="8">
-                            Đang tải dữ liệu...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+          </div>
+        </form>
+      </section>
     </main>
-
+    <footer>UniBorrow · Quản trị thiết bị và yêu cầu</footer>
+    <dialog id="confirmDialog" aria-labelledby="confirmTitle">
+      <h2 id="confirmTitle">Xác nhận thao tác</h2>
+      <p id="confirmText"></p>
+      <div class="actions">
+        <button id="confirmYes">Xác nhận</button
+        ><button id="confirmNo" class="secondary">Quay lại</button>
+      </div>
+    </dialog>
+    <script src="/js/common.js"></script>
     <script src="/js/admin.js"></script>
-</body>
+  </body>
 </html>

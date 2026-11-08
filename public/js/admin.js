@@ -1,262 +1,264 @@
-
-async function xuLyYeuCau(requestId, status) {
-    const hanhDong = {
-        approved: "duyệt",
-        rejected: "từ chối",
-        borrowed: "bàn giao thiết bị cho",
-        returned: "xác nhận trả thiết bị của"
+"use strict";
+let requests = [];
+let equipment = [];
+let editingOriginal = null;
+function renderRequests() {
+  const root = document.getElementById("requestList");
+  const q = document
+    .getElementById("requestSearch")
+    .value.trim()
+    .toLocaleLowerCase("vi");
+  const status = document.getElementById("requestStatus").value;
+  const filtered = requests.filter(
+    (r) =>
+      (!status || r.status === status) &&
+      (!q ||
+        [
+          r.id,
+          r.student_name,
+          r.student_email,
+          r.note,
+          ...(r.details || []).map((d) => d.equipment_name),
+        ]
+          .join(" ")
+          .toLocaleLowerCase("vi")
+          .includes(q)),
+  );
+  root.replaceChildren();
+  if (!filtered.length) {
+    root.textContent = "Không có yêu cầu phù hợp.";
+    return;
+  }
+  const next = {
+    pending: [
+      ["Duyệt", "approved"],
+      ["Từ chối", "rejected"],
+    ],
+    approved: [["Bàn giao", "borrowed"]],
+    borrowed: [["Xác nhận trả", "returned"]],
+  };
+  for (const r of filtered) {
+    const card = UB.requestCard(r, true);
+    const actions = UB.el("div", undefined, "actions");
+    for (const [label, status] of next[r.status] || []) {
+      actions.append(
+        UB.button(
+          label,
+          async () => {
+            if (
+              !(await UB.confirm(
+                `${label} yêu cầu #${r.id}?${status === "approved" ? " Duyệt không giữ kho thiết bị." : ""}`,
+              ))
+            )
+              return;
+            const result = await UB.api(
+              `/api/borrow-requests/${r.id}/status`,
+              "PATCH",
+              { status },
+            );
+            UB.message(result.message || "Đã cập nhật yêu cầu.");
+            await loadRequests();
+            await loadEquipment();
+          },
+          status === "rejected" ? "danger" : "",
+        ),
+      );
+    }
+    card.append(actions);
+    root.append(card);
+  }
+}
+async function loadRequests() {
+  const root = document.getElementById("requestList");
+  root.textContent = "Đang tải yêu cầu...";
+  try {
+    const [list, stats] = await Promise.all([
+      UB.api("/api/borrow-requests"),
+      UB.api("/api/stats"),
+    ]);
+    requests = list;
+    const box = document.getElementById("stats");
+    box.replaceChildren();
+    for (const [key, label] of [
+      ["total", "Tổng yêu cầu"],
+      ...Object.entries(UB.statuses),
+    ]) {
+      const card = UB.el("div", undefined, "stat-card");
+      card.append(UB.el("h3", label), UB.el("p", String(stats[key] || 0)));
+      box.append(card);
+    }
+    renderRequests();
+  } catch (e) {
+    root.textContent = e.message;
+    document.getElementById("stats").textContent = "Không tải được thống kê.";
+    throw e;
+  }
+}
+function renderEquipment() {
+  const root = document.getElementById("equipmentList");
+  const q = document
+    .getElementById("equipmentSearch")
+    .value.trim()
+    .toLocaleLowerCase("vi");
+  const category = document.getElementById("equipmentCategory").value;
+  const status = document.getElementById("equipmentStatus").value;
+  const items = equipment.filter(
+    (x) =>
+      (!q || x.name.toLocaleLowerCase("vi").includes(q)) &&
+      (!category || x.category === category) &&
+      (!status || x.status === status),
+  );
+  root.replaceChildren();
+  if (!items.length) {
+    root.textContent = "Không có thiết bị phù hợp.";
+    return;
+  }
+  for (const item of items) {
+    const card = UB.el("article", undefined, "card");
+    card.dataset.equipmentId = item.id;
+    card.append(
+      UB.el("p", item.category, "eyebrow"),
+      UB.el("h3", item.name),
+      UB.el("p", `Số lượng hiện có: ${item.quantity}`),
+      UB.el(
+        "p",
+        item.status === "available" ? "Cho phép mượn" : "Ngừng cho mượn",
+      ),
+      UB.el("p", item.description || "Chưa có mô tả.", "description"),
+    );
+    const actions = UB.el("div", undefined, "actions");
+    actions.append(
+      UB.button("Sửa thiết bị", () => openEditor(item), "secondary"),
+      UB.button(
+        "Xóa thiết bị",
+        async () => {
+          if (
+            !(await UB.confirm(
+              `Xóa thiết bị “${item.name}”? Nếu đã có lịch sử, hệ thống sẽ ngừng cho mượn và giữ lại lịch sử.`,
+            ))
+          )
+            return;
+          const result = await UB.api(`/api/equipment/${item.id}`, "DELETE");
+          UB.message(result.message || "Đã xử lý thiết bị.");
+          await loadEquipment();
+        },
+        "danger",
+      ),
+    );
+    card.append(actions);
+    root.append(card);
+  }
+}
+async function loadEquipment() {
+  const root = document.getElementById("equipmentList");
+  root.textContent = "Đang tải thiết bị...";
+  try {
+    equipment = await UB.api("/api/equipment");
+    const filter = document.getElementById("equipmentCategory");
+    const selected = filter.value;
+    filter.replaceChildren(new Option("Tất cả loại", ""));
+    for (const c of [...new Set(equipment.map((x) => x.category))].sort())
+      filter.add(new Option(c, c));
+    filter.value = selected;
+    renderEquipment();
+  } catch (e) {
+    root.textContent = e.message;
+    throw e;
+  }
+}
+function openEditor(item) {
+  editingOriginal = item
+    ? { ...item, description: item.description || "" }
+    : null;
+  document.getElementById("reloadEquipment").hidden = !item;
+  document.getElementById("equipmentForm").reset();
+  document.getElementById("editId").value = item?.id || "";
+  document.getElementById("editorTitle").textContent = item
+    ? "Sửa thiết bị"
+    : "Thêm thiết bị";
+  document.getElementById("editName").value = item?.name || "";
+  document.getElementById("editCategory").value = item?.category || "";
+  document.getElementById("editQuantity").value = item?.quantity ?? 0;
+  document.getElementById("editDescription").value = item?.description || "";
+  document.getElementById("editStatus").value = item?.status || "available";
+  const editor = document.getElementById("equipmentEditor");
+  editor.hidden = false;
+  editor.scrollIntoView({ behavior: "smooth" });
+  document.getElementById("editName").focus();
+}
+document.getElementById("equipmentForm").onsubmit = (e) => {
+  e.preventDefault();
+  UB.busy(e.target.querySelector("[type=submit]"), async () => {
+    const id = document.getElementById("editId").value;
+    const values = {
+      name: document.getElementById("editName").value.trim(),
+      category: document.getElementById("editCategory").value.trim(),
+      quantity: Number(document.getElementById("editQuantity").value),
+      description: document.getElementById("editDescription").value,
+      status: document.getElementById("editStatus").value,
     };
-
-    if (!hanhDong[status]) {
-        return;
+    const data = id
+      ? Object.fromEntries(
+          Object.entries(values).filter(
+            ([key, value]) => value !== editingOriginal[key],
+          ),
+        )
+      : values;
+    if (id && !Object.keys(data).length) {
+      UB.message("Chưa có thay đổi.");
+      return;
     }
-
-    if (!confirm(
-        `Bạn có chắc muốn ${hanhDong[status]} yêu cầu #${requestId}?`
-    )) {
-        return;
-    }
-
+    if (id && Object.hasOwn(data, "quantity"))
+      data.expectedQuantity = editingOriginal.quantity;
+    let result;
     try {
-        const response = await fetch(
-            `/api/borrow-requests/${requestId}/status`,
-            {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ status })
-            }
-        );
-
-        const ketQua = await response.json();
-
-        if (!response.ok) {
-            alert(ketQua.message || "Không thể xử lý yêu cầu!");
-            return;
-        }
-
-        alert(ketQua.message);
-        await hienThiYeuCau();
-
+      result = await UB.api(
+        id ? `/api/equipment/${id}` : "/api/equipment",
+        id ? "PATCH" : "POST",
+        data,
+      );
     } catch (error) {
-        console.error(error);
-        alert("Không thể kết nối đến máy chủ!");
+      if (error.status === 409)
+        error.message +=
+          " Chọn Tải lại thiết bị (bỏ thay đổi) để xem tồn kho mới trước khi sửa lại.";
+      throw error;
     }
-}
-
-function dinhDangNgay(ngay) {
-    if (!ngay) return "";
-
-    const date = new Date(ngay);
-
-    return Number.isNaN(date.getTime())
-        ? ""
-        : date.toLocaleDateString("vi-VN", {
-            timeZone: "Asia/Ho_Chi_Minh"
-        });
-}
-
-
-function capNhatThongKe(danhSach) {
-    const tongYeuCau = danhSach.length;
-
-    const choDuyet = danhSach.filter(
-        item => item.status === "pending"
-    ).length;
-
-    const daDuyet = danhSach.filter(
-        item => item.status === "approved"
-    ).length;
-
-    const tuChoi = danhSach.filter(
-        item => item.status === "rejected"
-    ).length;
-
-    const dangMuon = danhSach.filter(
-        item => item.status === "borrowed"
-    ).length;
-
-    const daTra = danhSach.filter(
-        item => item.status === "returned"
-    ).length;
-
-    document.getElementById("tongYeuCau").textContent = tongYeuCau;
-    document.getElementById("choDuyet").textContent = choDuyet;
-    document.getElementById("daDuyet").textContent = daDuyet;
-    document.getElementById("tuChoi").textContent = tuChoi;
-    document.getElementById("dangMuon").textContent = dangMuon;
-    document.getElementById("daTra").textContent = daTra;
-}
-
-
-function taoNut(text, className, requestId, status) {
-    const nut = document.createElement("button");
-
-    nut.textContent = text;
-    nut.type = "button";
-    nut.className = className;
-
-    nut.addEventListener("click", () => {
-        xuLyYeuCau(requestId, status);
-    });
-
-    return nut;
-}
-
-async function hienThiYeuCau() {
-    const danhSach = document.getElementById("danhSachYeuCau");
-    const nutLamMoi = document.getElementById("lamMoiDanhSach");
-
-    nutLamMoi.disabled = true;
-    nutLamMoi.textContent = "Đang tải...";
-
-    try {
-        const response = await fetch("/api/borrow-requests", {
-            cache: "no-store"
-        });
-
-        if (!response.ok) {
-            throw new Error("Không thể tải danh sách yêu cầu");
-        }
-
-        const yeuCau = await response.json();
-
-        capNhatThongKe(yeuCau);
-        danhSach.innerHTML = "";
-
-        if (yeuCau.length === 0) {
-            const hang = document.createElement("tr");
-            const o = document.createElement("td");
-
-            o.colSpan = 8;
-            o.textContent = "Chưa có yêu cầu mượn nào.";
-
-            hang.appendChild(o);
-            danhSach.appendChild(hang);
-            return;
-        }
-
-        const trangThai = {
-            pending: "Chờ duyệt",
-            approved: "Đã duyệt",
-            rejected: "Từ chối",
-            borrowed: "Đang mượn",
-            returned: "Đã trả",
-            cancelled: "Đã hủy"
-        };
-
-        const cacTrangThai = Object.keys(trangThai);
-
-        yeuCau.forEach(item => {
-            const hang = document.createElement("tr");
-
-            const giaTri = [
-                item.request_id,
-                item.student_name,
-                item.equipment_name,
-                item.quantity,
-                dinhDangNgay(item.borrow_date),
-                dinhDangNgay(item.return_date),
-                trangThai[item.status] || item.status
-            ];
-
-            giaTri.forEach((value, index) => {
-                const o = document.createElement("td");
-
-                if (index === 6) {
-                    const nhan = document.createElement("span");
-
-                    nhan.textContent = value;
-                    nhan.className = "status-badge";
-
-                    if (cacTrangThai.includes(item.status)) {
-                        nhan.classList.add(`status-${item.status}`);
-                    }
-
-                    o.appendChild(nhan);
-                } else {
-                    o.textContent = value;
-                }
-
-                hang.appendChild(o);
-            });
-
-            const oThaoTac = document.createElement("td");
-            oThaoTac.className = "admin-actions";
-
-            if (item.status === "pending") {
-                oThaoTac.appendChild(
-                    taoNut(
-                        "Duyệt",
-                        "btn-approve",
-                        item.request_id,
-                        "approved"
-                    )
-                );
-
-                oThaoTac.appendChild(
-                    taoNut(
-                        "Từ chối",
-                        "btn-reject",
-                        item.request_id,
-                        "rejected"
-                    )
-                );
-
-            } else if (item.status === "approved") {
-                oThaoTac.appendChild(
-                    taoNut(
-                        "Bàn giao",
-                        "btn-handover",
-                        item.request_id,
-                        "borrowed"
-                    )
-                );
-
-            } else if (item.status === "borrowed") {
-                oThaoTac.appendChild(
-                    taoNut(
-                        "Xác nhận trả",
-                        "btn-return",
-                        item.request_id,
-                        "returned"
-                    )
-                );
-
-            } else if (item.status === "returned") {
-                oThaoTac.textContent = "Đã hoàn thành";
-
-            } else {
-                oThaoTac.textContent = "Đã xử lý";
-            }
-
-            hang.appendChild(oThaoTac);
-            danhSach.appendChild(hang);
-        });
-
-    } catch (error) {
-        console.error(error);
-        danhSach.innerHTML = "";
-
-        const hang = document.createElement("tr");
-        const o = document.createElement("td");
-
-        o.colSpan = 8;
-        o.textContent = "Không thể tải danh sách yêu cầu.";
-
-        hang.appendChild(o);
-        danhSach.appendChild(hang);
-
-    } finally {
-        nutLamMoi.disabled = false;
-        nutLamMoi.textContent = "Làm mới";
+    document.getElementById("equipmentEditor").hidden = true;
+    UB.message(result.message || "Đã lưu thiết bị.");
+    await loadEquipment();
+  });
+};
+document.getElementById("newEquipment").onclick = () => openEditor();
+document.getElementById("reloadEquipment").onclick = (e) =>
+  UB.busy(e.target, async () => {
+    const id = document.getElementById("editId").value;
+    const item = await UB.api(`/api/equipment/${id}`);
+    await loadEquipment();
+    openEditor(item);
+    UB.message("Đã tải lại thiết bị. Các thay đổi chưa lưu đã được bỏ.");
+  });
+document.getElementById("closeEditor").onclick = () =>
+  (document.getElementById("equipmentEditor").hidden = true);
+document.getElementById("requestFilters").onsubmit = (e) => {
+  e.preventDefault();
+  renderRequests();
+};
+document.getElementById("adminEquipmentFilters").onsubmit = (e) => {
+  e.preventDefault();
+  renderEquipment();
+};
+document.getElementById("refreshRequests").onclick = (e) =>
+  UB.busy(e.target, loadRequests);
+(async () => {
+  try {
+    const user = await UB.init();
+    if (user?.role !== "admin") {
+      UB.message("Bạn không có quyền truy cập trang quản trị.", true);
+      window.location.replace("/");
+      return;
     }
-}
-
-document.getElementById("lamMoiDanhSach").addEventListener(
-    "click",
-    hienThiYeuCau
-);
-
-hienThiYeuCau();
+    await Promise.all([loadRequests(), loadEquipment()]);
+  } catch (e) {
+    UB.message(e.message, true);
+  }
+})();
